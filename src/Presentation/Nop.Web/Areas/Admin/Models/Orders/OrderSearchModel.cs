@@ -21,7 +21,6 @@ public partial record OrderSearchModel : BaseSearchModel
         AvailableStores = new List<SelectListItem>();
         AvailableVendors = new List<SelectListItem>();
         AvailableWarehouses = new List<SelectListItem>();
-        AvailablePaymentMethods = new List<SelectListItem>();
         AvailableCountries = new List<SelectListItem>();
         OrderStatusIds = new List<int>();
         PaymentStatusIds = new List<int>();
@@ -52,6 +51,8 @@ public partial record OrderSearchModel : BaseSearchModel
 
     [NopResourceDisplayName("Admin.Orders.List.PaymentMethod")]
     public string PaymentMethodSystemName { get; set; }
+    [NopResourceDisplayName("Admin.Orders.List.ShippingMethod")]
+    public string ShippingMethod { get; set; } //hossein2408
 
     [NopResourceDisplayName("Admin.Orders.List.Store")]
     public int StoreId { get; set; }
@@ -100,6 +101,8 @@ public partial record OrderSearchModel : BaseSearchModel
     public IList<SelectListItem> AvailableWarehouses { get; set; }
 
     public IList<SelectListItem> AvailablePaymentMethods { get; set; }
+    public IList<SelectListItem> AvailableShippingMethods { get; set; } //hossein2408
+
 
     public IList<SelectListItem> AvailableCountries { get; set; }
 

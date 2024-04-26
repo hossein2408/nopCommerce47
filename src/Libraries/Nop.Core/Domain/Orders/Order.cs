@@ -52,6 +52,7 @@ public partial class Order : BaseEntity, ISoftDeletedEntity
     /// </summary>
     public int OrderStatusId { get; set; }
 
+
     /// <summary>
     /// Gets or sets the shipping status identifier
     /// </summary>

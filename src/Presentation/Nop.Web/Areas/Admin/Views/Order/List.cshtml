@@ -246,6 +246,14 @@
                                                     <nop-select asp-for="PaymentMethodSystemName" asp-items="Model.AvailablePaymentMethods" />
                                                 </div>
                                             </div>
+                                            <div class="form-group row" @(Model.AvailableShippingMethods.SelectionIsNotPossible() || Model.IsLoggedInAsVendor ? Html.Raw("style='display: none;'") : null)>
+                                                <div class="col-md-4">
+                                                    <nop-label asp-for="ShippingMethod" />
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <nop-select asp-for="ShippingMethod" asp-items="Model.AvailableShippingMethods" />
+                                                </div>
+                                            </div>
                                             <div class="form-group row">
                                                 <div class="col-md-4">
                                                     <nop-label asp-for="OrderNotes" />
@@ -304,6 +312,7 @@
                                             new FilterParameter(nameof(Model.OrderStatusIds)),
                                             new FilterParameter(nameof(Model.PaymentStatusIds)),
                                             new FilterParameter(nameof(Model.ShippingStatusIds)),
+                                            new FilterParameter(nameof(Model.ShippingMethod)),
                                             new FilterParameter(nameof(Model.StoreId)),
                                             new FilterParameter(nameof(Model.VendorId)),
                                             new FilterParameter(nameof(Model.WarehouseId)),
@@ -346,7 +355,7 @@
                                         Title = T("Admin.Orders.Fields.PaymentStatus").Text,
                                         Width = "150"
                                     });
-                                    //a vendor does not have access to this functionality
+                                    //a vendor does not have access to this functionality 
                                     if (!Model.IsLoggedInAsVendor)
                                     {
                                         gridModel.ColumnCollection.Add(new ColumnProperty(nameof(OrderModel.ShippingStatus))
@@ -354,6 +363,16 @@
                                             Title = T("Admin.Orders.Fields.ShippingStatus").Text,
                                             Width = "150"
                                         });
+                                    }
+                                    //a vendor does not have access to this functionality 
+                                    if (!Model.IsLoggedInAsVendor)
+                                    {
+                                        gridModel.ColumnCollection.Add(new ColumnProperty(nameof(OrderModel.ShippingMethod))
+                                    {
+                                        Title = T("Admin.Orders.Fields.ShippingMethod").Text,
+                                        Width = "150",
+                                        Render = new RenderCustom("renderColumnShippingMethod")
+                                    });
                                     }
                                     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(OrderModel.CustomerEmail))
                                     {
@@ -413,6 +432,24 @@
                                     return '<span class="grid-report-item ' + color + '">' + data + '</span >';
                                 }
 
+                                    function renderColumnShippingMethod(data, type, row, meta) {
+                                        var color;
+                                        switch (row.ShippingMethod) {
+                                            case 'Ground':
+                                                color = 'yellow';
+                                                break;
+                                            case 'Next Day Air':
+                                                color = 'blue';
+                                                break;
+                                            case 'Pickup in store':
+                                                color = 'green';
+                                                break;
+                                            case 'aa':
+                                                color = 'red';
+                                                break;
+                                        }
+                                        return '<span class="grid-report-item ' + color + '">' + data + '</span >';
+                                    }
                                 function renderColumnCustomer(data, type, row, meta) {
                                     var link = '@Url.Content("~/Admin/Customer/Edit/")' + row.CustomerId;
                                     return `${row.CustomerFullName}<br /><a href="${link}">${data}</a>`;
@@ -435,6 +472,7 @@
                                         OrderStatusIds: $('#@Html.IdFor(model => model.OrderStatusIds)').val(),
                                         PaymentStatusIds: $('#@Html.IdFor(model => model.PaymentStatusIds)').val(),
                                         ShippingStatusIds: $('#@Html.IdFor(model => model.ShippingStatusIds)').val(),
+                                        ShippingMethod: $('#@Html.IdFor(model => model.ShippingMethod)').val(),
                                         StoreId: $('#@Html.IdFor(model => model.StoreId)').val(),
                                         VendorId: $('#@Html.IdFor(model => model.VendorId)').val(),
                                         WarehouseId: $('#@Html.IdFor(model => model.WarehouseId)').val(),

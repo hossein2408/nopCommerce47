@@ -70,6 +70,7 @@ public partial class OrderModelFactory : IOrderModelFactory
     protected readonly IOrderReportService _orderReportService;
     protected readonly IOrderService _orderService;
     protected readonly IPaymentPluginManager _paymentPluginManager;
+    protected readonly IShippingPluginManager _shippingPluginManager;
     protected readonly IPaymentService _paymentService;
     protected readonly IPictureService _pictureService;
     protected readonly IPriceCalculationService _priceCalculationService;
@@ -94,6 +95,7 @@ public partial class OrderModelFactory : IOrderModelFactory
     protected readonly IUrlRecordService _urlRecordService;
     protected readonly TaxSettings _taxSettings;
     private static readonly char[] _separator = [','];
+
 
     #endregion
 
@@ -121,6 +123,7 @@ public partial class OrderModelFactory : IOrderModelFactory
         IOrderReportService orderReportService,
         IOrderService orderService,
         IPaymentPluginManager paymentPluginManager,
+        IShippingPluginManager shippingPluginManager,
         IPaymentService paymentService,
         IPictureService pictureService,
         IPriceCalculationService priceCalculationService,
@@ -167,6 +170,7 @@ public partial class OrderModelFactory : IOrderModelFactory
         _orderReportService = orderReportService;
         _orderService = orderService;
         _paymentPluginManager = paymentPluginManager;
+        _shippingPluginManager = shippingPluginManager;
         _paymentService = paymentService;
         _pictureService = pictureService;
         _priceCalculationService = priceCalculationService;
@@ -607,6 +611,11 @@ public partial class OrderModelFactory : IOrderModelFactory
         model.PaymentMethod = pm != null ? pm.PluginDescriptor.FriendlyName : order.PaymentMethodSystemName;
         model.PaymentStatus = await _localizationService.GetLocalizedEnumAsync(order.PaymentStatus);
 
+        //shipping method info hossein2408
+        var sm = await _shippingPluginManager.LoadPluginBySystemNameAsync(order.ShippingMethod);
+        model.PaymentMethod = sm != null ? sm.PluginDescriptor.FriendlyName : order.ShippingMethod;
+        model.ShippingStatus = await _localizationService.GetLocalizedEnumAsync(order.ShippingStatus);
+
         //payment method buttons
         model.CanCancelOrder = _orderProcessingService.CanCancelOrder(order);
         model.CanCapture = await _orderProcessingService.CanCaptureAsync(order);
@@ -983,6 +992,14 @@ public partial class OrderModelFactory : IOrderModelFactory
             new SelectListItem { Text = method.PluginDescriptor.FriendlyName, Value = method.PluginDescriptor.SystemName }).ToList();
         searchModel.AvailablePaymentMethods.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = string.Empty });
 
+        //prepare available shipping methods hossein2408
+        // searchModel.AvailableShippingMethods = (await _shippingPluginManager.LoadAllPluginsAsync()).Select(method =>
+        //    new SelectListItem { Text = method.PluginDescriptor.FriendlyName, Value = method.PluginDescriptor.SystemName }).ToList();
+        // searchModel.AvailableShippingMethods.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = string.Empty });
+        searchModel.AvailableShippingMethods = (await _shippingService.GetAllShippingMethodsAsync()).Select(method =>
+         new SelectListItem { Text = method.Name, Value = method.Name }).ToList();
+        searchModel.AvailableShippingMethods.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Admin.Common.All"), Value = string.Empty });
+
         //prepare available billing countries
         searchModel.AvailableCountries = (await _countryService.GetAllCountriesForBillingAsync(showHidden: true))
             .Select(country => new SelectListItem { Text = country.Name, Value = country.Id.ToString() }).ToList();
@@ -1029,6 +1046,7 @@ public partial class OrderModelFactory : IOrderModelFactory
             productId: filterByProductId,
             warehouseId: searchModel.WarehouseId,
             paymentMethodSystemName: searchModel.PaymentMethodSystemName,
+            shippingMethod: searchModel.ShippingMethod,
             createdFromUtc: startDateValue,
             createdToUtc: endDateValue,
             osIds: orderStatusIds,
@@ -1059,7 +1077,8 @@ public partial class OrderModelFactory : IOrderModelFactory
                     CustomerEmail = billingAddress.Email,
                     CustomerFullName = $"{billingAddress.FirstName} {billingAddress.LastName}",
                     CustomerId = order.CustomerId,
-                    CustomOrderNumber = order.CustomOrderNumber
+                    CustomOrderNumber = order.CustomOrderNumber,
+                    ShippingMethod = order.ShippingMethod,
                 };
 
                 //convert dates to the user time
