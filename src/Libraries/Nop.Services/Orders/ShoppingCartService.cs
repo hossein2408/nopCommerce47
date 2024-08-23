@@ -1561,13 +1561,13 @@ public partial class ShoppingCartService : IShoppingCartService
         ArgumentNullException.ThrowIfNull(product);
 
         var warnings = new List<string>();
-        if (shoppingCartType == ShoppingCartType.ShoppingCart && !await _permissionService.AuthorizeAsync(StandardPermissionProvider.EnableShoppingCart, customer))
+        if (shoppingCartType == ShoppingCartType.ShoppingCart && !await _permissionService.AuthorizeAsync(StandardPermission.PublicStore.ENABLE_SHOPPING_CART, customer))
         {
             warnings.Add("Shopping cart is disabled");
             return warnings;
         }
 
-        if (shoppingCartType == ShoppingCartType.Wishlist && !await _permissionService.AuthorizeAsync(StandardPermissionProvider.EnableWishlist, customer))
+        if (shoppingCartType == ShoppingCartType.Wishlist && !await _permissionService.AuthorizeAsync(StandardPermission.PublicStore.ENABLE_WISHLIST, customer))
         {
             warnings.Add("Wishlist is disabled");
             return warnings;
@@ -1688,6 +1688,9 @@ public partial class ShoppingCartService : IShoppingCartService
 
         async Task addRequiredProductsToCartAsync(int qty = 0)
         {
+            if (!product.RequireOtherProducts)
+                return;
+
             //get these required products
             var requiredProducts = await _productService.GetProductsByIdsAsync(_productService.ParseRequiredProductIds(product));
             if (!requiredProducts.Any())
